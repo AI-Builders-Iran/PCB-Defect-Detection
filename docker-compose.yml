@@ -1,0 +1,46 @@
+# ============================================================================
+# Run the FastAPI service and the Streamlit dashboard together, sharing the
+# same built image.
+# Usage:
+#   docker compose up --build
+# ============================================================================
+version: "3.9"
+
+services:
+  api:
+    build: .
+    image: pcb-defect-detection:latest
+    container_name: pcb-api
+    ports:
+      - "8000:8000"
+    environment:
+      MODEL1_PATH: /app/app/api/models/best-pcb.onnx
+      MODEL2_PATH: /app/app/api/models/best_detect2.onnx
+      CONF_THRESHOLD: "0.25"
+      IOU_THRESHOLD: "0.45"
+      IMG_SIZE: "416"
+      DEVICE: "cpu"
+      CORS_ORIGINS: "*"
+    volumes:
+      # Mount model weights from the host (not committed to git/docker)
+      - ./app/api/models:/app/app/api/models:ro
+      - ./outputs:/app/outputs
+    restart: unless-stopped
+
+  dashboard:
+    build: .
+    image: pcb-defect-detection:latest
+    container_name: pcb-streamlit
+    command:
+      [
+        "streamlit", "run", "app/streamlit_app/app.py",
+        "--server.address=0.0.0.0",
+        "--server.port=8501"
+      ]
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./app/streamlit_app/models:/app/app/streamlit_app/models:ro
+    depends_on:
+      - api
+    restart: unless-stopped

@@ -1,0 +1,50 @@
+# --- Git / VCS ---
+.git
+.gitignore
+.github
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# --- Model weights (should be mounted at runtime, not baked into the image) ---
+app/api/models/*.pt
+app/api/models/*.onnx
+app/streamlit_app/models/*.pt
+app/streamlit_app/models/*.onnx
+*.pt
+*.onnx
+*.engine
+
+# --- Data / Outputs / Media ---
+outputs/
+*.mp4
+*.avi
+*.mov
+*.mkv
+results.json
+*.zip
+
+# --- IDE / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Docker itself ---
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# --- Docs (not needed inside the image) ---
+README.md
+*.md

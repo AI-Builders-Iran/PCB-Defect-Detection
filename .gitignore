@@ -1,0 +1,53 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Model weights (large; manage with Git LFS or separate storage) ---
+app/api/models/*.pt
+app/api/models/*.onnx
+app/api/models/*.engine
+app/streamlit_app/models/*.pt
+app/streamlit_app/models/*.onnx
+app/streamlit_app/models/*.engine
+*.pt
+*.onnx
+*.engine
+!**/models/.gitkeep
+
+# --- Runtime outputs / uploads ---
+outputs/
+*.mp4
+*.avi
+*.mov
+*.mkv
+results*.json
+tmp/
+*.tmp
+
+# --- Env / secrets ---
+.env
+.env.*
+!.env.example
+
+# --- IDE / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log

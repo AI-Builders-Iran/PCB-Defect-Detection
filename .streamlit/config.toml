@@ -1,0 +1,13 @@
+# Native Streamlit theme — no custom CSS involved, so it always renders
+# correctly and never conflicts with Streamlit's own widgets (sliders,
+# selectboxes, uploaders, etc.).
+[theme]
+base = "dark"
+primaryColor = "#3DDC97"
+backgroundColor = "#0E1117"
+secondaryBackgroundColor = "#161B22"
+textColor = "#FAFAFA"
+font = "sans serif"
+
+[server]
+maxUploadSize = 200

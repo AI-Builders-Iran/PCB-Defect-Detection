@@ -12,6 +12,14 @@ A two-stage computer vision system for **detecting, classifying, and tracking as
 
 ---
 
+## 🎬 Demo
+
+<p align="center">
+  <img src="demo_movie/Demo.gif" alt="PCB Defect Detection Demo" width="800">
+</p>
+
+---
+
 ## 📑 Table of Contents
 
 - [Architecture & Pipeline Logic](#-architecture--pipeline-logic)
@@ -74,7 +82,7 @@ PCB-Defect-Detection/
 │   │   ├── API_app.py          # FastAPI service (this project)
 │   │   └── models/             # ⚠️ Model weights go here (git-ignored)
 │   └── streamlit_app/
-│       ├── app.py              # Interactive dashboard (FA/EN, dark/light)
+│       ├── app.py              # Interactive dashboard (FA/EN)
 │       └── models/             # Model weights for the dashboard
 ├── src/
 │   └── pipeline.py             # Core pipeline (shared by the API and dashboard)
@@ -91,16 +99,21 @@ PCB-Defect-Detection/
 
 ## ✅ Prerequisites
 
-- Python **3.11+** (for local execution)
-- or Docker **24+** and, optionally, Docker Compose **v2** (for containerized execution)
-- Weights for both models: `best-pcb.onnx` (or `.pt`) and `best_detect2.onnx` (or `.pt`)
-- (Optional) A CUDA-capable GPU for faster inference — the default is `cpu`
+- **Python 3.11+** — for local (non-Docker) execution. Check your version:
+  ```bash
+  python --version    # or: python3 --version
+  ```
+- **pip** (comes with Python) and, ideally, the **venv** module (also built-in)
+- **Git** (optional, only needed if you clone the repo instead of downloading a zip)
+- **Docker 24+** and, optionally, **Docker Compose v2** — only needed for the containerized setup
+- Weights for both models: `best-pcb.onnx` (or `.pt`) and `best_detect2.onnx` (or `.pt`) — see [Preparing Model Weights](#-preparing-model-weights)
+- (Optional) A CUDA-capable GPU + drivers for faster inference — the default is `cpu`, which works everywhere
 
 ---
 
 ## 📦 Preparing Model Weights
 
-Model weights are **not included in the repo or the Docker image** (which is why they're excluded via `.gitignore`/`.dockerignore` — they're typically large and often proprietary). Before running the project, copy the weight files to:
+Model weights are **not included in the repo or the Docker image** (which is why they're excluded via `.gitignore`/`.dockerignore` — they're typically large and often proprietary). Before running the project, copy the weight files into **all four** of these paths (the API and the dashboard each load their own copy):
 
 ```
 app/api/models/best-pcb.onnx
@@ -110,28 +123,96 @@ app/streamlit_app/models/best-pcb.onnx
 app/streamlit_app/models/best_detect2.onnx
 ```
 
-You can also change the paths/filenames via the `MODEL1_PATH` / `MODEL2_PATH` environment variables (for the API) or from the dashboard's settings panel (for Streamlit).
+You can also change the paths/filenames via the `MODEL1_PATH` / `MODEL2_PATH` environment variables (for the API) or from the dashboard's sidebar settings panel (for Streamlit) if your weights live somewhere else or use different names.
 
 ---
 
 ## 🖥 Running Locally (without Docker)
 
+> ⚠️ **Run every command below from the project's root folder** (the folder that contains `requirements.txt`, `app/`, and `src/`) — both the API and the dashboard import from `src.pipeline`, and running them from a different folder is the most common source of `ModuleNotFoundError: No module named 'src'`.
+
+### Step 1 — Get the project onto your machine
+
+Either clone it with Git:
 ```bash
-# 1. Create a virtual environment (recommended)
+git clone <your-repo-url>
+cd PCB-Defect-Detection
+```
+or unzip the downloaded archive and open a terminal **inside** the extracted `PCB-Defect-Detection` folder.
+
+### Step 2 — Create and activate a virtual environment (recommended)
+
+A virtual environment keeps this project's Python packages separate from the rest of your system.
+
+**Windows — PowerShell**
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+*(If PowerShell blocks the script with an execution-policy error, run once as your user: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, then try activating again.)*
+
+**Windows — Command Prompt (cmd.exe)**
+```bat
+python -m venv .venv
+.venv\Scripts\activate.bat
+```
+
+**Linux / macOS — bash/zsh**
+```bash
 python3 -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
+source .venv/bin/activate
+```
 
-# 2. Install dependencies
+Your shell prompt should now start with `(.venv)`. Every `pip`/`python` command below should be run with this environment active.
+
+### Step 3 — Install dependencies
+
+```bash
+python -m pip install --upgrade pip
 pip install -r requirements.txt
+```
+This installs FastAPI, Uvicorn, Streamlit, OpenCV, Ultralytics (YOLO), and everything else needed by both services. It can take a few minutes the first time (PyTorch/Ultralytics are large downloads).
 
-# 3. Copy the model weights into the paths above
+**Verify the install worked:**
+```bash
+python -c "import fastapi, streamlit, cv2, ultralytics; print('All good ✅')"
+```
 
-# 4. Run FastAPI (from the project root — important, since it imports from src.pipeline)
+### Step 4 — Add the model weights
+
+Copy your `.onnx` (or `.pt`) files into the four paths described in [Preparing Model Weights](#-preparing-model-weights) above. Without them, both services will still start, but inference endpoints will report an error until the correct paths are set.
+
+### Step 5 — Run the FastAPI service
+
+From the project root:
+```bash
 uvicorn app.api.API_app:app --host 0.0.0.0 --port 8000 --reload
+```
+Then open **http://localhost:8000/docs** and confirm `GET /health` returns `"status": "ok"`.
 
-# 5. Run the Streamlit dashboard (in a separate terminal)
+### Step 6 — Run the Streamlit dashboard (in a separate terminal)
+
+Open a **new** terminal, activate the same virtual environment again (Step 2), make sure you're still in the project root, then:
+```bash
 streamlit run app/streamlit_app/app.py
 ```
+Streamlit will print a local URL (usually **http://localhost:8501**) and normally opens it in your browser automatically.
+
+### Quick reference
+
+| Step | Command |
+|---|---|
+| Create venv (Windows PowerShell) | `python -m venv .venv && .venv\Scripts\Activate.ps1` |
+| Create venv (Linux/macOS) | `python3 -m venv .venv && source .venv/bin/activate` |
+| Install deps | `pip install -r requirements.txt` |
+| Run API | `uvicorn app.api.API_app:app --host 0.0.0.0 --port 8000 --reload` |
+| Run dashboard | `streamlit run app/streamlit_app/app.py` |
+| Deactivate venv | `deactivate` |
+
+Once running:
+- API: `http://localhost:8000`
+- Interactive Swagger docs: `http://localhost:8000/docs`
+- Streamlit dashboard: `http://localhost:8501`
 
 Once running:
 - API: `http://localhost:8000`
@@ -296,7 +377,7 @@ All of these are optional and have sensible defaults (see the full list in `.env
 
 ## 🖼 Streamlit Dashboard
 
-The dashboard (`app/streamlit_app/app.py`) is a full UI with Persian/English support (RTL/LTR), dark/light mode, single-image analysis, and full video processing with KPIs and downloadable outputs — it runs independently of FastAPI (calling `src.pipeline` directly) and can run alongside the API or on its own.
+The dashboard (`app/streamlit_app/app.py`) offers Persian/English support, single-image analysis, and full video processing with metrics and downloadable outputs — it runs independently of FastAPI (calling `src.pipeline` directly) and can run alongside the API or on its own. It uses Streamlit's native theme (`.streamlit/config.toml`) rather than custom CSS, so the UI stays consistent and doesn't clash with Streamlit's built-in widgets.
 
 ---
 
@@ -304,18 +385,74 @@ The dashboard (`app/streamlit_app/app.py`) is a full UI with Persian/English sup
 
 | Issue | Fix |
 |---|---|
+| `ModuleNotFoundError: No module named 'src'` | The dashboard already handles this automatically (it adds the project root to `sys.path` at startup), but if you still see it, make sure you're running `streamlit run app/streamlit_app/app.py` **from the project root**, with the venv active |
 | `/health` returns `"status": "degraded"` | Check the `MODEL1_PATH`/`MODEL2_PATH` paths; in Docker, make sure the models folder is mounted |
-| `ImportError: ultralytics not installed` | Run `pip install -r requirements.txt` from the project root |
-| Output video won't play in the browser | `ffmpeg` must be installed in the system/container (already installed in the Dockerfile) |
+| `ImportError: ultralytics not installed` | Run `pip install -r requirements.txt` from the project root, inside the activated virtual environment |
+| `'python' is not recognized...` (Windows) | Python isn't on your `PATH`; reinstall Python from python.org and check "Add Python to PATH", or use the `py` launcher instead: `py -m venv .venv` |
+| PowerShell blocks venv activation | Run once: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, then activate again |
+| Output video won't play in the browser | `ffmpeg` must be installed in the system/container (already installed in the Dockerfile); locally, `pip install imageio-ffmpeg` provides one automatically |
 | Inference is slow | Lower `IMG_SIZE`, or set `DEVICE=cuda:0` on a GPU-equipped machine |
 | 413 error on upload | Increase `MAX_UPLOAD_MB` |
+| Port already in use | Pick a different port, e.g. `uvicorn app.api.API_app:app --port 8001` or `streamlit run app/streamlit_app/app.py --server.port 8502` |
 
 ---
 
-## 🗺 Roadmap
+## 👥 Team
 
-- [ ] Authentication (API key / JWT) for endpoints
-- [ ] Job queue backed by Redis/Celery instead of an in-memory thread pool
-- [ ] WebSocket support for live webcam streaming
-- [ ] Batch inference for multiple images at once
-- [ ] Prometheus/Grafana metrics integration
+This project was developed by a team of AI engineers with different areas of expertise:
+
+| Member | Role | Contact |
+|---|---|---|
+| [Mhajirezaei](https://github.com/Mhajirezaei) | Demo & Project Development | GitHub |
+| [Hossein Heydari](https://github.com/HosseinHeydari2004) | Backend Development & API (FastAPI) | GitHub |
+| [Amir mohammad Hatamzadeh](https://github.com/hatamzadeh86) | Computer Vision Development | GitHub |
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! If you would like to improve this project, add new features, fix bugs, or optimize the pipeline, feel free to contribute.
+
+### How to contribute
+
+1. Fork this repository.
+2. Create a new branch:
+
+```bash
+git checkout -b feature/your-feature-name
+```
+
+3. Make your changes.
+4. Commit your changes:
+
+```bash
+git commit -m "Add new feature"
+```
+
+5. Push your branch:
+
+```bash
+git push origin feature/your-feature-name
+```
+
+6. Open a Pull Request and describe your changes.
+
+
+---
+
+## 💬 Support
+
+If you have any questions, suggestions, or issues related to this project, feel free to contact the team.
+
+For bug reports, please open an issue in the repository with:
+
+- A clear description of the problem
+- Steps to reproduce the issue
+- Error logs or screenshots (if available)
+
+For direct communication:
+
+- API & Backend: [Hossein Heydari](https://github.com/HosseinHeydari2004)
+- Computer Vision: [Amir mohammad Hatamzadeh](https://github.com/hatamzadeh86)
+
+We appreciate your feedback and contributions ❤️

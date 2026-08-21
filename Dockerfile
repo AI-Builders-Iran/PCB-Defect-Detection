@@ -44,6 +44,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # ----------------------------------------------------------------------------
 COPY src/ ./src/
 COPY app/ ./app/
+COPY .streamlit/ ./.streamlit/
 
 # Run the container as a non-root user for better security
 RUN useradd --create-home --shell /bin/bash appuser \

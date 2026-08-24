@@ -63,7 +63,7 @@ The pipeline (`src/pipeline.py`) works in two stages:
      → annotated frame + downloadable JSON
 ```
 
-If no PCB board is found in the frame, the second model falls back to running on the whole frame so no defect is missed. The core class `PCBPipeline` supports three usage modes:
+The system doesn't run a single model over the whole frame. First, **Model 1 (PCB-SEG)** finds and segments the PCB board itself within the frame. Then, instead of running the second model on the *entire* image, we crop just the board region that Model 1 found and run **Model 2 (Defect Detection)** only on that cropped region to look for defects inside it. This two-stage design was chosen specifically **for higher speed and lower computational cost** — processing a small cropped region is far cheaper than running defect detection over the full frame every time. If no PCB board is found in the frame, the second model falls back to running on the whole frame so no defect is missed. The core class `PCBPipeline` supports three usage modes:
 
 | Method | Purpose |
 |---|---|

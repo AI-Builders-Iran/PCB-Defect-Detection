@@ -23,6 +23,7 @@ app/api/models/*.engine
 app/streamlit_app/models/*.pt
 app/streamlit_app/models/*.onnx
 app/streamlit_app/models/*.engine
+*.zip
 *.pt
 *.onnx
 *.engine

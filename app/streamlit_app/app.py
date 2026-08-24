@@ -47,6 +47,12 @@ try:
 except ImportError:
     _FFMPEG_AVAILABLE = False
 
+try:
+    import torch
+    _CUDA_AVAILABLE = torch.cuda.is_available()
+except ImportError:
+    _CUDA_AVAILABLE = False
+
 
 # ---------------------------------------------------------------------------
 # Page configuration
@@ -77,10 +83,13 @@ I18N = {
         "iou_label": "آستانه IoU",
         "imgsz_label": "وضوح ورودی",
         "tracking_label": "ردیابی عیوب بین فریم‌ها",
+        "device_label": "دستگاه اجرا (Device)",
         "models_ready": "مدل‌ها آماده‌اند",
         "models_missing": "فایل مدل‌ها پیدا نشد — مسیرها را در نوار کناری بررسی کنید",
         "ffmpeg_ready": "انکودر ویدیو (ffmpeg) فعال است",
         "ffmpeg_missing": "ffmpeg موجود نیست؛ ویدیوی خروجی ممکن است در مرورگر پخش نشود",
+        "cuda_ready": "GPU (CUDA) در دسترس است",
+        "cuda_missing": "GPU در دسترس نیست؛ روی CPU اجرا می‌شود",
         "upload_img": "یک تصویر از برد PCB بارگذاری کنید",
         "upload_vid": "یک ویدیوی خط تولید بارگذاری کنید",
         "run_img": "شروع تحلیل",
@@ -122,10 +131,13 @@ I18N = {
         "iou_label": "IoU threshold",
         "imgsz_label": "Input resolution",
         "tracking_label": "Track defects across frames",
+        "device_label": "Device",
         "models_ready": "Models ready",
         "models_missing": "Model files not found — check the paths in the sidebar",
         "ffmpeg_ready": "Video encoder (ffmpeg) available",
         "ffmpeg_missing": "ffmpeg not available; output video may not play in-browser",
+        "cuda_ready": "GPU (CUDA) available",
+        "cuda_missing": "No GPU available; running on CPU",
         "upload_img": "Upload a PCB image",
         "upload_vid": "Upload a production-line video",
         "run_img": "Run Analysis",
@@ -163,11 +175,11 @@ txt = I18N[st.session_state.lang]
 
 
 # ---------------------------------------------------------------------------
-# Sidebar — language, model paths, and status
+# Sidebar — language, model paths, device, and status
 # ---------------------------------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-DEFAULT_MODEL1 = str(BASE_DIR / "models" / "best-pcb.onnx")
-DEFAULT_MODEL2 = str(BASE_DIR / "models" / "best_detect2.onnx")
+DEFAULT_MODEL1 = str(BASE_DIR / "models" / "best-pcb.pt")
+DEFAULT_MODEL2 = str(BASE_DIR / "models" / "best_detect2.pt")
 
 with st.sidebar:
     lang_choice = st.selectbox(
@@ -190,6 +202,13 @@ with st.sidebar:
     imgsz = st.select_slider(txt["imgsz_label"], options=[320, 416, 512, 640], value=416)
     enable_tracking = st.checkbox(txt["tracking_label"], value=True)
 
+    device_options = ["cpu"] + (["cuda:0"] if _CUDA_AVAILABLE else [])
+    device = st.selectbox(
+        txt["device_label"],
+        options=device_options,
+        index=(1 if _CUDA_AVAILABLE else 0),
+    )
+
     st.divider()
     models_ok = os.path.exists(model1_path) and os.path.exists(model2_path)
     if models_ok:
@@ -202,12 +221,17 @@ with st.sidebar:
     else:
         st.caption(f"⚠️ {txt['ffmpeg_missing']}")
 
+    if _CUDA_AVAILABLE:
+        st.caption(f"✅ {txt['cuda_ready']}")
+    else:
+        st.caption(f"⚠️ {txt['cuda_missing']}")
+
 
 # ---------------------------------------------------------------------------
 # Cached pipeline loader
 # ---------------------------------------------------------------------------
 @st.cache_resource(show_spinner=False)
-def load_pipeline(m1, m2, conf, iou, sz, tracking):
+def load_pipeline(m1, m2, conf, iou, sz, tracking, dev):
     config = PipelineConfig(
         model1_path=m1,
         model2_path=m2,
@@ -215,6 +239,7 @@ def load_pipeline(m1, m2, conf, iou, sz, tracking):
         iou_threshold=iou,
         imgsz=sz,
         enable_tracking=tracking,
+        device=dev,
         save_video=False,
         save_json=False,
         show_preview=False,
@@ -280,7 +305,7 @@ with tab_image:
 
         if run_clicked:
             try:
-                pipeline = load_pipeline(model1_path, model2_path, conf_threshold, iou_threshold, imgsz, enable_tracking)
+                pipeline = load_pipeline(model1_path, model2_path, conf_threshold, iou_threshold, imgsz, enable_tracking, device)
 
                 with st.spinner(txt["spinner_img"]):
                     result = pipeline.process_image(tmp_in_path)
@@ -381,6 +406,7 @@ with tab_video:
                     imgsz=imgsz,
                     max_frames=max_frames,
                     enable_tracking=enable_tracking,
+                    device=device,
                     save_video=True,
                     save_json=True,
                     show_preview=False,

@@ -53,8 +53,8 @@ logger = logging.getLogger("pcb-api")
 BASE_DIR = Path(__file__).resolve().parent
 MODELS_DIR = Path(os.getenv("MODELS_DIR", BASE_DIR / "models"))
 
-MODEL1_PATH = os.getenv("MODEL1_PATH", str(MODELS_DIR / "best-pcb.onnx"))
-MODEL2_PATH = os.getenv("MODEL2_PATH", str(MODELS_DIR / "best_detect2.onnx"))
+MODEL1_PATH = os.getenv("MODEL1_PATH", str(MODELS_DIR / "best-pcb.pt"))
+MODEL2_PATH = os.getenv("MODEL2_PATH", str(MODELS_DIR / "best_detect2.pt"))
 
 DEFAULT_CONF = float(os.getenv("CONF_THRESHOLD", "0.25"))
 DEFAULT_IOU = float(os.getenv("IOU_THRESHOLD", "0.45"))

@@ -106,7 +106,7 @@ PCB-Defect-Detection/
 - **pip** (comes with Python) and, ideally, the **venv** module (also built-in)
 - **Git** (optional, only needed if you clone the repo instead of downloading a zip)
 - **Docker 24+** and, optionally, **Docker Compose v2** — only needed for the containerized setup
-- Weights for both models: `best-pcb.onnx` (or `.pt`) and `best_detect2.onnx` (or `.pt`) — see [Preparing Model Weights](#-preparing-model-weights)
+- Weights for both models: `best-pcb.pt` and `best_detect2.pt` — see [Preparing Model Weights](#-preparing-model-weights)
 - (Optional) A CUDA-capable GPU + drivers for faster inference — the default is `cpu`, which works everywhere
 
 ---
@@ -116,11 +116,11 @@ PCB-Defect-Detection/
 Model weights are **not included in the repo or the Docker image** (which is why they're excluded via `.gitignore`/`.dockerignore` — they're typically large and often proprietary). Before running the project, copy the weight files into **all four** of these paths (the API and the dashboard each load their own copy):
 
 ```
-app/api/models/best-pcb.onnx
-app/api/models/best_detect2.onnx
+app/api/models/best-pcb.pt
+app/api/models/best_detect2.pt
 
-app/streamlit_app/models/best-pcb.onnx
-app/streamlit_app/models/best_detect2.onnx
+app/streamlit_app/models/best-pcb.pt
+app/streamlit_app/models/best_detect2.pt
 ```
 
 You can also change the paths/filenames via the `MODEL1_PATH` / `MODEL2_PATH` environment variables (for the API) or from the dashboard's sidebar settings panel (for Streamlit) if your weights live somewhere else or use different names.
@@ -180,7 +180,7 @@ python -c "import fastapi, streamlit, cv2, ultralytics; print('All good ✅')"
 
 ### Step 4 — Add the model weights
 
-Copy your `.onnx` (or `.pt`) files into the four paths described in [Preparing Model Weights](#-preparing-model-weights) above. Without them, both services will still start, but inference endpoints will report an error until the correct paths are set.
+Copy your `.pt` files into the four paths described in [Preparing Model Weights](#-preparing-model-weights) above. Without them, both services will still start, but inference endpoints will report an error until the correct paths are set.
 
 ### Step 5 — Run the FastAPI service
 
@@ -362,8 +362,8 @@ All of these are optional and have sensible defaults (see the full list in `.env
 
 | Variable | Default | Description |
 |---|---|---|
-| `MODEL1_PATH` | `app/api/models/best-pcb.onnx` | Path to the board segmentation model weights |
-| `MODEL2_PATH` | `app/api/models/best_detect2.onnx` | Path to the defect detection model weights |
+| `MODEL1_PATH` | `app/api/models/best-pcb.pt` | Path to the board segmentation model weights |
+| `MODEL2_PATH` | `app/api/models/best_detect2.pt` | Path to the defect detection model weights |
 | `CONF_THRESHOLD` | `0.25` | Default confidence threshold |
 | `IOU_THRESHOLD` | `0.45` | Default IoU/NMS threshold |
 | `IMG_SIZE` | `416` | Inference input resolution |

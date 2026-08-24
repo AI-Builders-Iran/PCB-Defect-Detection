@@ -14,8 +14,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      MODEL1_PATH: /app/app/api/models/best-pcb.onnx
-      MODEL2_PATH: /app/app/api/models/best_detect2.onnx
+      MODEL1_PATH: /app/app/api/models/best-pcb.pt
+      MODEL2_PATH: /app/app/api/models/best_detect2.pt
       CONF_THRESHOLD: "0.25"
       IOU_THRESHOLD: "0.45"
       IMG_SIZE: "416"

@@ -1,11 +1,11 @@
 import cv2
-import json
 import numpy as np
+import json
 import time
-from dataclasses import dataclass, field
-from enum import Enum
 from pathlib import Path
 from typing import Union, Optional, Tuple, List, Dict, Any
+from dataclasses import dataclass, field
+from enum import Enum
 
 try:
     from ultralytics import YOLO
@@ -95,7 +95,6 @@ class PipelineConfig:
 
     colors: Dict[int, Tuple[int, int, int]] = field(default_factory=dict)
 
-    use_onnx: bool = False
     device: str = "cpu"
     verbose: bool = True
 
@@ -124,7 +123,8 @@ class PCBPipeline:
 
         try:
             self._model1 = YOLO(self.config.model1_path)
-            self._model1.to(self.config.device)
+            if str(self.config.model1_path).lower().endswith(".pt"):
+                self._model1.to(self.config.device)
             if self.config.verbose:
                 print(f"✅ مدل PCB-SEG بارگذاری شد: {self.config.model1_path} (device={self.config.device})")
         except Exception as e:
@@ -132,7 +132,8 @@ class PCBPipeline:
 
         try:
             self._model2 = YOLO(self.config.model2_path)
-            self._model2.to(self.config.device)
+            if str(self.config.model2_path).lower().endswith(".pt"):
+                self._model2.to(self.config.device)
             if self.config.verbose:
                 print(f"✅ مدل Defect Detection بارگذاری شد: {self.config.model2_path} (device={self.config.device})")
         except Exception as e:
@@ -386,8 +387,7 @@ class PCBPipeline:
         if self._fps_history:
             avg_fps = sum(self._fps_history[-30:]) / len(self._fps_history[-30:])
             fps_text = f"FPS: {avg_fps:.1f}"
-            cv2.putText(annotated, fps_text, (w - 120, 28), cv2.FONT_HERSHEY_DUPLEX, 0.6, (255, 255, 100), 1,
-                        cv2.LINE_AA)
+            cv2.putText(annotated, fps_text, (w - 120, 28), cv2.FONT_HERSHEY_DUPLEX, 0.6, (255, 255, 100), 1, cv2.LINE_AA)
 
         return annotated
 

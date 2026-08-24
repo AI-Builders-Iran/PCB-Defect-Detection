@@ -15,7 +15,7 @@ A two-stage computer vision system for **detecting, classifying, and tracking as
 ## 🎬 Demo
 
 <p align="center">
-  <img src="demo_movie/Demo.gif" alt="PCB Defect Detection Demo" width="800">
+  <img src="demo_movie/demo.gif" alt="PCB Defect Detection Demo" width="800">
 </p>
 
 ---
